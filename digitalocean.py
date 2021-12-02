@@ -17,13 +17,15 @@ class DigitalOceanAPI:
 		self._token = token
 
 		# Register API subsets
+		self.volume = BlockStorageAPI(self)
+		self.domains = DomainAPI(self)
 		self.droplet = DropletAPI(self)
 
 
-	def _make_get(self, url, query):
+	def _make_get(self, url, params):
 		r = requests.get(
 			url=f"{self.ROOT_PATH}{url}",
-			headers=self.headers, params=query)
+			headers=self.headers, params=params)
 		return r.json()
 
 
@@ -34,14 +36,268 @@ class DigitalOceanAPI:
 		return r.json()
 
 
-	def _make_delete(self, url, query, no_resp_on_success=False):
+	def _make_delete(self, url, params, no_resp_on_success=False):
 		r = requests.delete(
 			url=f"{self.ROOT_PATH}{url}",
-			headers=self.headers, params=query)
+			headers=self.headers, params=params)
 
 		if no_resp_on_success and r.ok:
 			return None
 		return r.json()
+
+
+	def _make_put(self, url, payload):
+		r = requests.patch(
+			url=f"{self.ROOT_PATH}{url}",
+			headers=self.headers, json=payload)
+		return r.json()
+
+
+
+class BlockStorageAPI:
+
+	def __init__(self, api):
+		self._api = api
+
+
+	def list(self, **kwargs):
+		...
+
+
+	def create(self, **kwargs):
+		...
+
+
+	def delete_by_name(self, **kwargs):
+		...
+
+
+	def delete(self, volume_id):
+		...
+
+
+	def attach(self, **kwargs):
+		...
+
+
+	def detatch(self, **kwargs):
+		...
+
+
+
+class DomainAPI:
+	
+	def __init__(self, api):
+		self._api = api
+
+
+	def list_records(self, domain_name, **kwargs):
+		"""
+		domain_name (required) - string
+			The name of the domain itself.
+
+		name - string
+			A fully qualified record name. For example, to only include
+			records matching sub.example.com, send a GET request to
+			`/v2/domains/$DOMAIN_NAME/records?name=sub.example.com`.
+
+		type - string ["A", "AAAA", "CAA", "CNAME", "MX", "NS", "SOA", "SRV", "TXT"]
+			The type of the DNS record. For example, A, CNAME, TXT, ...
+		"""
+		path = f"/v2/domains/{domain_name}/records"
+
+		# Required and optional with defaults
+		params = {
+		}
+
+		# Optional with no defaults
+		name = kwargs.get("name", None)
+		if name is not None:
+			params.update({"name": name})
+		type = kwargs.get("type", None)
+		if type is not None:
+			params.update({"type": type})
+
+		# Make request
+		return self._api._make_get(path, params)
+
+
+	def create_record(self, domain_name, type, name, data, **kwargs):
+		"""
+		domain_name (required) - string
+			The name of the domain itself
+
+		type (required) - string
+			The type of the DNS record. For example: A, CNAME, TXT, ...
+
+		data (required) - string
+			Variable data depending on record type. For example, the
+			"data" value for an A record would be the IPv4 address to
+			which the domain will be mapped. For a CAA record, it would
+			contain the domain name of the CA being granted permission
+			to issue cretificates.
+
+		priority - integer, Nullable
+			The priority for SRV and MX records.
+
+		port - integer, Nullable
+			The port for SRV records.
+
+		ttl - integer
+			This value is the time to live for the record, in seconds.
+			This defines the time frame that clients can cache queried
+			information before a refresh should be requested.
+
+		weight - integer, Nullable
+			The weight for SRV records.
+
+		flags - integer, Nullable
+			An unsigned integer between 0-255 used for CAA records.
+
+		tag - string, Nullable
+			The parameter tag for CAA records. Valid values are "issue",
+			"issuewild", or "iodef".
+		"""
+		path = f"/v2/domains/{domain_name}/records"
+
+		# Required and optional with defaults
+		payload = {
+			"type": type,
+			"name": name,
+			"data": data
+		}
+
+		# Optional with no defaults
+		priority = kwargs.get("priority", None)
+		if priority is not None:
+			payload.update({"priority": priority})
+		port = kwargs.get("port", None)
+		if port is not None:
+			payload.update({"port": port})
+		ttl = kwargs.get("ttl", None)
+		if ttl is not None:
+			payload.update({"ttl": ttl})
+		weight = kwargs.get("weight", None)
+		if weight is not None:
+			payload.update({"weight": weight})
+		flags = kwargs.get("flags", None)
+		if flags is not None:
+			payload.update({"flags": flags})
+		tag = kwargs.get("tag", None)
+		if tag is not None:
+			payload.update({"tag": tag})
+
+
+		# Make request
+		return self._api._make_post(path, payload)
+
+
+	def get_record(self, domain_name, domain_record_id):
+		"""
+		domain_name (required) - string
+			The name of the domain itself.
+
+		domain_record_id (required) - integer
+			The unique identifier of the domain record.
+		"""
+		path = f"/v2/domains/{domain_name}/records/{domain_record_id}"
+
+		# Make request
+		return self._api._make_get(path, None)
+
+
+	def update_record(self, domain_name, domain_record_id, type, **kwargs):
+		"""
+		domain_name (required) - string
+			The name of the domain itself.
+
+		domain_record_id (required) - integer
+			The unique identifier of the domain record.
+
+		type (required) - string
+			The type of the DNS record. For eaxmple, A, CNAME, TXT, ...
+
+		name - string
+			The host name, alias, or service being defined by the
+			record.
+
+		data - string
+			Variable data depending on record type. For example, the
+			"data" value for an A record would be the IPv4 address to
+			which the domain will be mapped. For a CAA record, it would
+			contain the domain name of the CA being granted permission
+			to issue cretificates.
+
+		priority - integer, Nullable
+			The priority for SRV and MX records.
+
+		port - integer, Nullable
+			The port for SRV records.
+
+		ttl - integer
+			This value is the time to live for the record, in seconds.
+			This defines the time frame that clients can cache queried
+			information before a refresh should be requested.
+
+		weight - integer, Nullable
+			The weight for SRV records.
+
+		flags - integer, Nullable
+			An unsigned integer between 0-255 used for CAA records.
+
+		tag - string, Nullable
+			The parameter tag for CAA records. Valid values are "issue",
+			"issuewild", or "iodef".
+		"""
+		path = f"/v2/domains/{domain_name}/records/{domain_record_id}"
+
+		# Required and optional with defaults
+		payload = {
+			"type": type
+		}
+
+		# Optional with no defaults
+		name = kwargs.get("name", None)
+		if name is not None:
+			payload.update({"name": name})
+		data = kwargs.get("data", None)
+		if data is not None:
+			payload.update({"data": data})
+		priority = kwargs.get("priority", None)
+		if priority is not None:
+			payload.update({"priority": priority})
+		port = kwargs.get("port", None)
+		if port is not None:
+			payload.update({"port": port})
+		ttl = kwargs.get("ttl", None)
+		if ttl is not None:
+			payload.update({"ttl": ttl})
+		weight = kwargs.get("weight", None)
+		if weight is not None:
+			payload.update({"weight": weight})
+		flags = kwargs.get("flags", None)
+		if flags is not None:
+			payload.update({"flags": flags})
+		tag = kwargs.get("tag", None)
+		if tag is not None:
+			payload.update({"tag": tag})
+
+		# Make request
+		return self._api._make_put(path, payload)
+
+
+	def delete_record(self, domain_name, domain_record_id):
+		"""
+		domain_name (required) - string
+			The name of the domain itself.
+
+		domain_record_id (required) - integer
+			The unique identifier of the domain record.
+		"""
+		path = f"/v2/domains/{domain_name}/records/{domain_record_id}"
+
+		# Make request
+		return self._api._make_delete(path, None)
 
 
 
@@ -67,7 +323,7 @@ class DropletAPI:
 		path = "/v2/droplets"
 
 		# Required and optional with defaults
-		query = {
+		params = {
 			"per_page": kwargs.get("per_page", 20),
 			"page": kwargs.get("page", 1)
 		}
@@ -75,10 +331,10 @@ class DropletAPI:
 		# Optional with no defaults
 		tag_name = kwargs.get("tag_name", None)
 		if tag_name is not None:
-			query.update({"tag_name": tag_name})
+			params.update({"tag_name": tag_name})
 
 		# Make request
-		return self._api._make_get(path, query)
+		return self._api._make_get(path, params)
 
 
 	def create(self, name, region, size, image, **kwargs):
@@ -180,6 +436,10 @@ class DropletAPI:
 		return self._api._make_post(path, payload)
 
 
+	def create_multiple(self, **kwargs):
+		...
+
+
 	def delete_by_tag(self, tag_name):
 		"""
 		tag_name (required) - string
@@ -188,12 +448,23 @@ class DropletAPI:
 		path = "/v2/droplets"
 
 		# Required and optional with defaults
-		query = {
+		params = {
 			"tag_name": tag_name
 		}
 
 		# Make request
-		return self._api._make_delete(path, query, no_resp_on_success=True)
+		return self._api._make_delete(path, params, no_resp_on_success=True)
+
+
+	def get(self, droplet_id):
+		"""
+		droplet_id (required) - integer [>=1]
+			A unique identifier for a Droplet instance.
+		"""
+		path = f"/v2/droplets/{droplet_id}"
+
+		# Make request
+		return self._api._make_get(path, None)
 
 
 	def delete(self, droplet_id):

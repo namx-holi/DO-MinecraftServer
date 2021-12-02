@@ -12,6 +12,7 @@ api = DigitalOceanAPI(access_token)
 
 
 # Find the correct Minecraft droplet and delete it
+print("Getting ID of Droplet")
 d_list_resp = api.droplet.list(tag_name=d_tags[0])
 d_id = None
 for droplet in d_list_resp["droplets"]:
@@ -19,17 +20,5 @@ for droplet in d_list_resp["droplets"]:
 		d_id = droplet["id"]
 		break
 
+print("Deleting Droplet")
 d_delete_resp = api.droplet.delete(d_id)
-...
-
-
-
-
-
-
-# Delete Minecraft droplet
-d_delete_resp = api.droplet.delete_by_tag(d_tags)
-print(d_delete_resp)
-
-
-# Create volume
