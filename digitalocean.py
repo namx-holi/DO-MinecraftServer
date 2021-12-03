@@ -17,9 +17,9 @@ class DigitalOceanAPI:
 		self._token = token
 
 		# Register API subsets
-		self.volume = BlockStorageAPI(self)
+		self.volumes = BlockStorageAPI(self)
 		self.domains = DomainAPI(self)
-		self.droplet = DropletAPI(self)
+		self.droplets = DropletAPI(self)
 
 
 	def _make_get(self, url, params):
@@ -47,7 +47,7 @@ class DigitalOceanAPI:
 
 
 	def _make_put(self, url, payload):
-		r = requests.patch(
+		r = requests.put(
 			url=f"{self.ROOT_PATH}{url}",
 			headers=self.headers, json=payload)
 		return r.json()
@@ -61,27 +61,150 @@ class BlockStorageAPI:
 
 
 	def list(self, **kwargs):
-		...
+		"""
+		name - string
+			The block storage volume's name.
+
+		region - string
+			The slug identifier for the region where the resource is
+			available.
+
+		per_page - integer [1 .. 200]
+		Default: 20
+			Number of items returned per page
+
+		page - integer [>=1]
+		Default: 1
+			Which 'page' of paginated results to return.
+		"""
+		path = "/v2/volumes"
+
+		# Required and optional with defaults
+		params = {
+			"per_page": kwargs.get("per_page", 20),
+			"page": kwargs.get("page", 1)
+		}
+
+		# Optional with no defaults
+		name = kwargs.get("name", None)
+		if name is not None:
+			params.update({"name": name})
+		region = kwargs.get("region", None)
+		if region is not None:
+			params.update({"region": region})
+
+		return self._api._make_get(path, params)
 
 
-	def create(self, **kwargs):
-		...
+	def action(self, type, volume_id, droplet_id, **kwargs):
+		"""
+		type (required) - string
+			The volume action to initiate
+
+		volume_id (required) - int
+			The id of the block storage volume
+
+		region - string
+			The slug identifier for the region where the resource will
+			initially be available.
+
+		droplet_id (required) - integer
+			The unique identifier for the Droplet the volume will be
+			attached or detached from.
+
+		tags - Array of strings, Nullable
+			A flat array of tag names as strings to be applied to the
+			resource. Tag names may be for either existing or new tags
+		"""
+		path = f"/v2/volumes/{volume_id}/actions"
+
+		# Required and optional with defaults
+		payload = {
+			"type": type,
+			"droplet_id": droplet_id
+		}
+
+		# Optional with no defaults
+		region = kwargs.get("region", None)
+		if region is not None:
+			payload.update({"region": region})
+		tags = kwargs.get("tags", None)
+		if tags is not None:
+			payload.update({"tags": tags})
+
+		# Make request
+		return self._api._make_post(path, payload)
 
 
-	def delete_by_name(self, **kwargs):
-		...
+	def attach(self, volume_id, droplet_id, **kwargs):
+		"""
+		Wrapper for action
+		"""
+		return self.action("attach", volume_id, droplet_id, **kwargs)
 
 
-	def delete(self, volume_id):
-		...
+	def detach(self, volume_id, droplet_id, **kwargs):
+		"""
+		Wrapper for action
+		"""
+		return self.action("detach", volume_id, droplet_id, **kwargs)
 
 
-	def attach(self, **kwargs):
-		...
+	def action_by_name(self, type, volume_name, droplet_id, **kwargs):
+		"""
+		type (required) - string
+			The volume action to initiate
+
+		volume_name (required) - string
+			The name of the block storage volume
+
+		region - string
+			The slug identifier for the region where the resource will
+			initially be available.
+
+		droplet_id (required) - integer
+			The unique identifier for the Droplet the volume will be
+			attached or detached from.
+
+		tags - Array of strings, Nullable
+			A flat array of tag names as strings to be applied to the
+			resource. Tag names may be for either existing or new tags
+		"""
+		path = "/v2/volumes/actions"
+
+		# Required and optional with defaults
+		payload = {
+			"volume_name": volume_name,
+			"type": type,
+			"droplet_id": droplet_id
+		}
+
+		# Optional with no defaults
+		region = kwargs.get("region", None)
+		if region is not None:
+			payload.update({"region": region})
+		tags = kwargs.get("tags", None)
+		if tags is not None:
+			payload.update({"tags": tags})
+
+		# Make request
+		return self._api._make_post(path, payload)
 
 
-	def detatch(self, **kwargs):
-		...
+	def attach_by_name(self, volume_name, droplet_id, **kwargs):
+		"""
+		Wrapper for action_by_name
+		"""
+		return self.action_by_name("attach", volume_name, droplet_id, **kwargs)
+
+
+	def detach_by_name(self, volume_name, droplet_id, **kwargs):
+		"""
+		Wrapper for action_by_name
+		"""
+		return self.action_by_name("detach", volume_name, droplet_id, **kwargs)
+	
+
 
 
 
