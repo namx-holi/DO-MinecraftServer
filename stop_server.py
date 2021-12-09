@@ -11,14 +11,7 @@ region = "sgp1"
 
 # Droplet Config
 droplet_name = "DO-MinecraftServer"
-droplet_size = "s-1vcpu-1gb"
-droplet_image = "ubuntu-20-04-x64"
-droplet_ssh_keys = [os.environ.get("DO_SSH_FINGERPRINT")]
 droplet_tags = ["DO-MinecraftServer"]
-
-# Network config
-domain = os.environ.get("DO_DOMAIN")
-subdomain = os.environ.get("DO_SUBDOMAIN")
 
 # Volume config
 volume_name = "do-minecraft-server"
