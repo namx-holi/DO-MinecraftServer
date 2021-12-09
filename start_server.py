@@ -123,7 +123,7 @@ for line in stderr:
 
 # Start Minecraft server!
 print("  Starting Minecraft Server in background")
-cmd = "nohup /mnt/mc/start.sh &"
+cmd = "nohup /mnt/mc/start.sh 2>&1 > ~/minecraftserver.log &"
 stdin, stdout, stderr = ssh.exec_command(cmd)
 
 # Run command to open firewall for Minecraft server
