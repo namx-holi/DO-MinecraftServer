@@ -109,17 +109,17 @@ stdin, stdout, stderr = ssh.exec_command(cmd)
 for line in stderr:
 	print(line)
 
-# Create swap space
-print("  Setting up swapfile")
-cmd = f"""
-sudo fallocate -l 4G /swapfile
-	&& sudo chmod 600 /swapfile
-	&& sudo mkswap /swapfile
-	&& sudo swapon /swapfile
-	&& sudo sysctl vm.swappiness=10""".replace("\n"," ")
-stdin, stdout, stderr = ssh.exec_command(cmd)
-for line in stderr:
-	print(line)
+# # Create swap space
+# print("  Setting up swapfile")
+# cmd = f"""
+# sudo fallocate -l 4G /swapfile
+# 	&& sudo chmod 600 /swapfile
+# 	&& sudo mkswap /swapfile
+# 	&& sudo swapon /swapfile
+# 	&& sudo sysctl vm.swappiness=10""".replace("\n"," ")
+# stdin, stdout, stderr = ssh.exec_command(cmd)
+# for line in stderr:
+# 	print(line)
 
 # Start Minecraft server!
 print("  Starting Minecraft Server in background")

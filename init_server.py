@@ -1,6 +1,6 @@
 ...
 
-SERVER_GB = 4
+SERVER_GB = 3
 
 
 init_script = f"""
