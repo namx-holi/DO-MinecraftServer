@@ -67,7 +67,7 @@ cmd = """ps -ef | awk '$8=="/mnt/mc/jdk/bin/java" {print $2}'"""
 stdin, stdout, stderr = ssh.exec_command(cmd)
 pid = stdout.read().decode().strip()
 
-if pid is not "":
+if pid != "":
 	# Send a SIGTERM to server
 	print("  Sending SIGTERM to process")
 	cmd = f"kill -15 {pid}"
@@ -77,7 +77,7 @@ if pid is not "":
 
 	# Ensure the server has stopped
 	print("  Waiting until server has stopped")
-	while pid is not "":
+	while pid != "":
 		time.sleep(3)
 		get_pid_cmd = """ps -ef | awk '$8=="/mnt/mc/jdk/bin/java" {print $2}'"""
 		stdin, stdout, stderr = ssh.exec_command(get_pid_cmd)
