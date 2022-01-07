@@ -15,6 +15,9 @@ except ImportError:
 	print("Using GPIO_Stub")
 	GPIO = GPIO_Stub()
 
+# Normal imports
+from server_handler import ServerHandler
+
 
 # Name of the indicator that will be used to say server is on
 SERVER_ON_INDICATOR_NAME = "server_indicator"
@@ -29,14 +32,7 @@ OUTPUT_PIN_INITIAL_STATE = GPIO.LOW
 
 
 
-
-
-
-
-
-
-
-class PiIndicator:
+class IndicatorHandler:
 
 	def __init__(self, input_pin_map={}, output_pin_map={}):
 		print("Initialising indicator pins")
@@ -91,3 +87,52 @@ class PiIndicator:
 			self.turn_on_output(tag)
 		else:
 			self.turn_off_output(tag)
+
+
+	def close(self):
+		GPIO.cleanup()
+
+
+
+class App:
+
+	def __init__(self):
+		self.server_handler = ServerHandler()
+		self.indicator_handler = IndicatorHandler()
+
+		# Check what state the Minecraft server is in already
+		droplet = self.server_handler.poll_server()
+		if droplet:
+			self.server_running = True
+			self.indicator_handler.turn_on_output(SERVER_ON_INDICATOR_NAME)
+		else:
+			self.server_running = False
+			self.indicator_handler.turn_off_output(SERVER_ON_INDICATOR_NAME)
+
+
+	def start_server(self):
+		if self.server_running:
+			print("Server already running. Not starting again.")
+			return
+
+		start_success = self.server_handler.start_server()
+		if start_success:
+			self.server_running = True
+			self.indicator_handler.turn_on_output(SERVER_ON_INDICATOR_NAME)
+		else:
+			# TODO: Have an error LED?
+			...
+
+
+	def stop_server(self):
+		if not self.server_running:
+			print("Server not running. Won't try stopping server.")
+			return
+
+		stop_success = self.server_handler.stop_server()
+		if stop_success:
+			self.server_running = False
+			self.indicator_handler.turn_off_output(SERVER_ON_INDICATOR_NAME)
+		else:
+			# TODO: Have an error LED?
+			...
