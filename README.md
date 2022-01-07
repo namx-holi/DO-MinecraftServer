@@ -19,6 +19,19 @@ https://raspberrytips.com/install-latest-python-raspberry-pi/
 https://www.dexterindustries.com/howto/run-a-program-on-your-raspberry-pi-at-startup/
 
 
+
+Install some Pi specific libraries
+```sh
+py -m venv ./venv
+source venv/bin/activate
+pip install -r requirements.txt
+
+# Pi specific
+pip install gpiozero
+pip install RPi.GPIO --pre # RPi.GPIO not released for py3.9 as of writing.
+```
+
+
 ### Starting server
 TODO
 

@@ -25,13 +25,13 @@ OUTPUT_PIN_INITIAL_STATE = GPIO.LOW
 
 
 
-class RaspberryPiApp:
+class PiIndicator:
 
-	def __init__(self):
+	def __init__(self, input_pin_map={}, output_pin_map={}):
 		print("Initialising indicator pins")
 
 		# Save state of all pins in pin map
-		self.output_pins = {x:GPIO.LOW for x in OUTPUT_PIN_MAP.keys()}
+		self.output_pins = {x:GPIO.LOW for x in output_pin_map.keys()}
 
 		# Set up pins on the Pi side
 		self._setup_pi()
@@ -48,6 +48,7 @@ class RaspberryPiApp:
 
 		# Set up pin numbers and modes
 		for pin in self.output_pins.values():
+			print(f"Setting up pin {pin} as output")
 			GPIO.setup(pin, GPIO.OUT, initial=OUTPUT_PIN_INITIAL_STATE)
 
 
