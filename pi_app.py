@@ -208,3 +208,17 @@ class App:
 					self.start_server()
 
 			time.sleep(0.1)
+
+
+	def close(self):
+		self.io_handler.close()
+
+
+
+if __name__ == "__main__":
+	app = App()
+	try:
+		app.loop()
+	except Exception as e:
+		print(e)
+	app.close()
