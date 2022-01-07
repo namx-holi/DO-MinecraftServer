@@ -179,7 +179,7 @@ class App:
 	def loop(self):
 		while True:
 			# Update all input states
-			self.io_handler.read_inputs()
+			self.io_handler.update_inputs()
 
 			# If server toggle button pressed, toggle server state
 			if self.io_handler.check_input(SERVER_TOGGLE_BUTTON_NAME):
