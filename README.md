@@ -14,6 +14,11 @@ TODO: Notes about each environment variable, what are required to be set, and wh
 
 ## Usage
 
+### Raspberry Pi
+https://raspberrytips.com/install-latest-python-raspberry-pi/
+https://www.dexterindustries.com/howto/run-a-program-on-your-raspberry-pi-at-startup/
+
+
 ### Starting server
 TODO
 
