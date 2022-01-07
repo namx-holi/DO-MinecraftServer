@@ -86,7 +86,7 @@ class IO_Handler:
 		if tag not in self.input_state_map:
 			raise Exception("Given input pin tag not in input pin map")
 
-		return self.input_state_map[tag] == 0
+		return self.input_state_map[tag] == 1
 
 
 	def turn_on_output(self, tag):
