@@ -16,6 +16,7 @@ except ImportError:
 	GPIO = GPIO_Stub()
 
 # Normal imports
+import time
 from server_handler import ServerHandler
 
 
