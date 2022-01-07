@@ -21,8 +21,9 @@ from server_handler import ServerHandler
 
 
 # Name of the indicator that will be used to say server is on
-SERVER_ON_INDICATOR_NAME = "server_indicator"
 SERVER_TOGGLE_BUTTON_NAME = "server_toggle_btn"
+SERVER_ON_INDICATOR_NAME = "server_indicator"
+SERVER_PROCESSING_INDICATOR_NAME = "server_working_indicator"
 
 
 # Output pin map
@@ -30,7 +31,8 @@ INPUT_PIN_MAP = {
 	SERVER_TOGGLE_BUTTON_NAME: 22
 }
 OUTPUT_PIN_MAP = {
-	SERVER_ON_INDICATOR_NAME: 8
+	SERVER_ON_INDICATOR_NAME: 8,
+	SERVER_PROCESSING_INDICATOR_NAME: 32
 }
 
 # Default state that output pins will start in
@@ -133,6 +135,9 @@ class App:
 			output_pin_map=OUTPUT_PIN_MAP
 		)
 
+		# Working indicator
+		self.io_handler.turn_on_output(SERVER_PROCESSING_INDICATOR_NAME)
+
 		# Check what state the Minecraft server is in already
 		droplet = self.server_handler.poll_server()
 		if droplet:
@@ -142,15 +147,19 @@ class App:
 			self.server_running = False
 			self.io_handler.turn_off_output(SERVER_ON_INDICATOR_NAME)
 
+		# Turn off working indicator
+		self.io_handler.turn_off_output(SERVER_PROCESSING_INDICATOR_NAME)
+
 
 	def start_server(self):
 		if self.server_running:
 			print("Server already running. Not starting again.")
 			return
 
-		# TODO: Have some sort of indicator showing work.
-		...
+		# Working indicator
+		self.io_handler.turn_on_output(SERVER_PROCESSING_INDICATOR_NAME)
 
+		# Start server!
 		start_success = self.server_handler.start_server()
 		if start_success:
 			self.server_running = True
@@ -159,15 +168,19 @@ class App:
 			# TODO: Have an error LED?
 			...
 
+		# Turn off working indicator
+		self.io_handler.turn_off_output(SERVER_PROCESSING_INDICATOR_NAME)
+
 
 	def stop_server(self):
 		if not self.server_running:
 			print("Server not running. Won't try stopping server.")
 			return
 
-		# TODO: Have some sort of indicator showing work.
-		...
+		# Working indicator
+		self.io_handler.turn_on_output(SERVER_PROCESSING_INDICATOR_NAME)
 
+		# Stop server!
 		stop_success = self.server_handler.stop_server()
 		if stop_success:
 			self.server_running = False
@@ -175,6 +188,9 @@ class App:
 		else:
 			# TODO: Have an error LED?
 			...
+
+		# Turn off working indicator
+		self.io_handler.turn_off_output(SERVER_PROCESSING_INDICATOR_NAME)
 
 
 	def loop(self):
@@ -187,14 +203,8 @@ class App:
 
 				# If server already running, shut down. Otherwise, start it!
 				if self.server_running:
-					# self.stop_server()
-					print("stop server")
-					time.sleep(3)
-					self.server_running = False
+					self.stop_server()
 				else:
-					# self.start_server()
-					print("start server")
-					time.sleep(3)
-					self.server_running = True
+					self.start_server()
 
 			time.sleep(0.1)
