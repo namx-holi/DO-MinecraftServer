@@ -16,12 +16,23 @@ except ImportError:
 	GPIO = GPIO_Stub()
 
 
+# Name of the indicator that will be used to say server is on
+SERVER_ON_INDICATOR_NAME = "server_indicator"
 
+# Output pin map
 OUTPUT_PIN_MAP = {
-	"server_indicator": 8
+	SERVER_ON_INDICATOR_NAME: 8
 }
 
+# Default state that output pins will start in
 OUTPUT_PIN_INITIAL_STATE = GPIO.LOW
+
+
+
+
+
+
+
 
 
 
@@ -59,8 +70,6 @@ class PiIndicator:
 		if tag not in self.output_state_map:
 			raise Exception("Given output pin tag not in output pin map")
 
-		print(self.output_state_map)
-
 		self.output_state_map[tag] = GPIO.HIGH
 		GPIO.output(self.output_pin_map[tag], GPIO.HIGH)
 
@@ -69,8 +78,6 @@ class PiIndicator:
 		if tag not in self.output_state_map:
 			raise Exception("Given output pin tag not in output pin map")
 
-		print(self.output_state_map)
-
 		self.output_state_map[tag] = GPIO.LOW
 		GPIO.output(self.output_pin_map[tag], GPIO.LOW)
 
@@ -78,8 +85,6 @@ class PiIndicator:
 	def toggle_output(self, tag):
 		if tag not in self.output_state_map:
 			raise Exception("Given output pin tag not in output pin map")
-
-		print(self.output_state_map)
 
 		# If they go low, we go high
 		if self.output_state_map[tag] == GPIO.LOW:
