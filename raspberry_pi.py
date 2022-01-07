@@ -31,7 +31,10 @@ class PiIndicator:
 		print("Initialising indicator pins")
 
 		# Save state of all pins in pin map
-		self.output_pins = {x:GPIO.LOW for x in output_pin_map.keys()}
+		self.output_pin_map = output_pin_map
+		self.output_state_map = {
+			x:OUTPUT_PIN_INITIAL_STATE
+			for x in output_pin_map.keys()}
 
 		# Set up pins on the Pi side
 		self._setup_pi()
@@ -47,7 +50,7 @@ class PiIndicator:
 		GPIO.setmode(GPIO.BOARD)
 
 		# Set up pin numbers and modes
-		for pin in self.output_pins.values():
+		for pin in self.output_pin_map.values():
 			print(f"Setting up pin {pin} as output")
 			GPIO.setup(pin, GPIO.OUT, initial=OUTPUT_PIN_INITIAL_STATE)
 
@@ -56,30 +59,30 @@ class PiIndicator:
 		if tag not in self.output_pins:
 			raise Exception("Given output pin tag not in output pin map")
 
-		print(self.output_pins)
+		print(self.output_state_map)
 
-		self.output_pins[tag] = GPIO.HIGH
-		GPIO.output(self.output_pins[tag], GPIO.HIGH)
+		self.output_state_map[tag] = GPIO.HIGH
+		GPIO.output(self.output_pin_map[tag], GPIO.HIGH)
 
 
 	def turn_off_output(self, tag):
 		if tag not in self.output_pins:
 			raise Exception("Given output pin tag not in output pin map")
 
-		print(self.output_pins)
+		print(self.output_state_map)
 
-		self.output_pins[tag] = GPIO.LOW
-		GPIO.output(self.output_pins[tag], GPIO.LOW)
+		self.output_state_map[tag] = GPIO.LOW
+		GPIO.output(self.output_pin_map[tag], GPIO.LOW)
 
 
 	def toggle_output(self, tag):
 		if tag not in self.output_pins:
 			raise Exception("Given output pin tag not in output pin map")
 
-		print(self.output_pins)
+		print(self.output_state_map)
 
 		# If they go low, we go high
-		if self.output_pins[tag] == GPIO.LOW:
+		if self.output_state_map[tag] == GPIO.LOW:
 			self.turn_on_output(tag)
 		else:
 			self.turn_off_output(tag)
