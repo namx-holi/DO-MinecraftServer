@@ -56,7 +56,7 @@ class PiIndicator:
 
 
 	def turn_on_output(self, tag):
-		if tag not in self.output_pins:
+		if tag not in self.output_state_map:
 			raise Exception("Given output pin tag not in output pin map")
 
 		print(self.output_state_map)
@@ -66,7 +66,7 @@ class PiIndicator:
 
 
 	def turn_off_output(self, tag):
-		if tag not in self.output_pins:
+		if tag not in self.output_state_map:
 			raise Exception("Given output pin tag not in output pin map")
 
 		print(self.output_state_map)
@@ -76,7 +76,7 @@ class PiIndicator:
 
 
 	def toggle_output(self, tag):
-		if tag not in self.output_pins:
+		if tag not in self.output_state_map:
 			raise Exception("Given output pin tag not in output pin map")
 
 		print(self.output_state_map)
