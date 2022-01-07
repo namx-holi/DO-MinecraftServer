@@ -21,8 +21,13 @@ from server_handler import ServerHandler
 
 # Name of the indicator that will be used to say server is on
 SERVER_ON_INDICATOR_NAME = "server_indicator"
+SERVER_TOGGLE_BUTTON_NAME = "server_toggle_btn"
+
 
 # Output pin map
+INPUT_PIN_MAP = {
+	SERVER_TOGGLE_BUTTON_NAME: 22
+}
 OUTPUT_PIN_MAP = {
 	SERVER_ON_INDICATOR_NAME: 8
 }
@@ -32,12 +37,17 @@ OUTPUT_PIN_INITIAL_STATE = GPIO.LOW
 
 
 
-class IndicatorHandler:
+class IO_Handler:
 
 	def __init__(self, input_pin_map={}, output_pin_map={}):
 		print("Initialising indicator pins")
 
 		# Save state of all pins in pin map
+		self.input_pin_map = input_pin_map
+		self.input_state_map = {
+			x:0
+			for x in input_pin_map.keys()}
+
 		self.output_pin_map = output_pin_map
 		self.output_state_map = {
 			x:OUTPUT_PIN_INITIAL_STATE
@@ -57,9 +67,25 @@ class IndicatorHandler:
 		GPIO.setmode(GPIO.BOARD)
 
 		# Set up pin numbers and modes
+		for pin in self.input_pin_map.values():
+			print(f"Setting up pin {pin} as input")
+			GPIO.setup(pin, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
+
 		for pin in self.output_pin_map.values():
 			print(f"Setting up pin {pin} as output")
 			GPIO.setup(pin, GPIO.OUT, initial=OUTPUT_PIN_INITIAL_STATE)
+
+
+	def update_inputs(self):
+		for tag in self.input_state_map.keys():
+			self.input_state_map[tag] = GPIO.input(self.input_pin_map[tag])
+
+
+	def check_input(self, tag):
+		if tag not in self.input_state_map:
+			raise Exception("Given input pin tag not in input pin map")
+
+		return self.input_state_map[tag] == 0
 
 
 	def turn_on_output(self, tag):
@@ -101,7 +127,8 @@ class App:
 		self.server_handler = ServerHandler()
 
 		# Handles showing state of server
-		self.indicator_handler = IndicatorHandler(
+		self.io_handler = IO_Handler(
+			input_pin_map=INPUT_PIN_MAP,
 			output_pin_map=OUTPUT_PIN_MAP
 		)
 
@@ -109,10 +136,10 @@ class App:
 		droplet = self.server_handler.poll_server()
 		if droplet:
 			self.server_running = True
-			self.indicator_handler.turn_on_output(SERVER_ON_INDICATOR_NAME)
+			self.io_handler.turn_on_output(SERVER_ON_INDICATOR_NAME)
 		else:
 			self.server_running = False
-			self.indicator_handler.turn_off_output(SERVER_ON_INDICATOR_NAME)
+			self.io_handler.turn_off_output(SERVER_ON_INDICATOR_NAME)
 
 
 	def start_server(self):
@@ -120,10 +147,13 @@ class App:
 			print("Server already running. Not starting again.")
 			return
 
+		# TODO: Have some sort of indicator showing work.
+		...
+
 		start_success = self.server_handler.start_server()
 		if start_success:
 			self.server_running = True
-			self.indicator_handler.turn_on_output(SERVER_ON_INDICATOR_NAME)
+			self.io_handler.turn_on_output(SERVER_ON_INDICATOR_NAME)
 		else:
 			# TODO: Have an error LED?
 			...
@@ -134,10 +164,33 @@ class App:
 			print("Server not running. Won't try stopping server.")
 			return
 
+		# TODO: Have some sort of indicator showing work.
+		...
+
 		stop_success = self.server_handler.stop_server()
 		if stop_success:
 			self.server_running = False
-			self.indicator_handler.turn_off_output(SERVER_ON_INDICATOR_NAME)
+			self.io_handler.turn_off_output(SERVER_ON_INDICATOR_NAME)
 		else:
 			# TODO: Have an error LED?
 			...
+
+
+	def loop(self):
+		while True:
+			# Update all input states
+			self.io_handler.read_inputs()
+
+			# If server toggle button pressed, toggle server state
+			if self.io_handler.check_input(SERVER_TOGGLE_BUTTON_NAME):
+				print("BUtton PRESSED!!!")
+
+				# If server already running, shut down. Otherwise, start it!
+				if self.server_running:
+					# self.stop_server()
+					print("stop server")
+				else:
+					# self.start_server()
+					print("start server")
+
+			time.sleep(3)
