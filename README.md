@@ -1,10 +1,36 @@
-DO-MinecraftServer
+# DO-MinecraftServer
 
 
-## How to resize volume
-First, expand the size on DO.
+## Setup
 
-Then, you need to expand the partition. This can be done using:
+### Initialisation
+TODO: Notes about what to set up on Digital Ocean, how to set up the Volume, etc.
+
+
+### Environment Variables
+TODO: Notes about each environment variable, what are required to be set, and what are optional/defaulted.
+
+
+
+## Usage
+
+### Starting server
+TODO
+
+
+### Stopping server
+TODO
+
+
+
+## Maintenance
+
+### Resizing Volume
+At some point, the space set up on the volume will get a bit too small.
+
+To resize the Volume, first start up the server. Then expand the Volume on `cloud.digitalocean`.
+
+Finally, expand the partition by SSHing into the server and running the following commands:
 ```sh
 # Unmount
 umount /mnt/mc
