@@ -97,8 +97,13 @@ class IndicatorHandler:
 class App:
 
 	def __init__(self):
+		# Handles starting/stopping server
 		self.server_handler = ServerHandler()
-		self.indicator_handler = IndicatorHandler()
+
+		# Handles showing state of server
+		self.indicator_handler = IndicatorHandler(
+			output_pin_map=OUTPUT_PIN_MAP
+		)
 
 		# Check what state the Minecraft server is in already
 		droplet = self.server_handler.poll_server()
