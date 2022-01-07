@@ -184,14 +184,17 @@ class App:
 
 			# If server toggle button pressed, toggle server state
 			if self.io_handler.check_input(SERVER_TOGGLE_BUTTON_NAME):
-				print("BUtton PRESSED!!!")
 
 				# If server already running, shut down. Otherwise, start it!
 				if self.server_running:
 					# self.stop_server()
 					print("stop server")
+					time.sleep(3)
+					self.server_running = False
 				else:
 					# self.start_server()
 					print("start server")
+					time.sleep(3)
+					self.server_running = True
 
-			time.sleep(3)
+			time.sleep(0.1)
