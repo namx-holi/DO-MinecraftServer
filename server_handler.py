@@ -1,6 +1,7 @@
 
 import paramiko
 import time
+import urllib.error
 import urllib.request
 
 from config import DigitalOceanConfig as Config
@@ -24,7 +25,7 @@ class ServerHandler:
 			try:
 				urllib.request.urlopen(DigitalOceanAPI.ROOT_PATH)
 				return True
-			except:
+			except urllib.error.URLError:
 				return False
 
 		# Wait until we can connect to DO
