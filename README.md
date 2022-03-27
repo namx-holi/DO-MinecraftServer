@@ -31,6 +31,20 @@ pip install gpiozero
 pip install RPi.GPIO --pre # RPi.GPIO not released for py3.9 as of writing.
 ```
 
+TODO: Write this
+Add this into `/etc/rc.local`
+```sh
+# Send stdout and stderr from rc.local to log file
+exec 1>/tmp/rc.local.log 2>&1
+# Tell sh to display commands before execution
+set -x
+
+# Start Minecraft Digital Ocean server starter
+sudo \
+  /home/pi/DO-MinecraftServer/venv/bin/python \
+  /home/pi/DO-MinecraftServer/pi_app.py &
+```
+
 
 ### Starting server
 TODO
