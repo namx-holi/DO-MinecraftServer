@@ -1,6 +1,7 @@
 
 import paramiko
 import time
+import urllib.request
 
 from config import DigitalOceanConfig as Config
 from digitalocean import DigitalOceanAPI
@@ -14,6 +15,25 @@ class ServerHandler:
 	MC_SERVER_POLL_DELAY = 3 # seconds
 
 	USE_SWAP = False
+
+	@classmethod
+	def wait_until_internet_connectivity(cls):
+
+		# Helper method to check if connected right now.
+		def _is_connected():
+			try:
+				urllib.request.urlopen(DigitalOceanAPI.ROOT_PATH)
+				return True
+			except:
+				return False
+
+		# Wait until we can connect to DO
+		while True:
+			if _is_connected():
+				return
+			else:
+				print("Cannot connect to DigitalOcean. Retrying in 3 seconds.")
+				time.sleep(3)
 
 
 	@classmethod

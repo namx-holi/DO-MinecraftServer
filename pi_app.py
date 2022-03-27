@@ -138,6 +138,9 @@ class App:
 		# Working indicator
 		self.io_handler.turn_on_output(SERVER_PROCESSING_INDICATOR_NAME)
 
+		# Wait until we are connected to internet!
+		self.server_handler.wait_until_internet_connectivity()
+
 		# Check what state the Minecraft server is in already
 		droplet = self.server_handler.poll_server()
 		if droplet:
