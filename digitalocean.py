@@ -3,11 +3,6 @@ import requests
 
 
 class DigitalOceanAPI:
-
-	# Used to check if internet is up
-	POLL_PATH = "https://digitalocean.com"
-
-	# Used for requests
 	ROOT_PATH = "https://api.digitalocean.com"
 
 	@property

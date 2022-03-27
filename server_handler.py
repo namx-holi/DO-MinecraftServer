@@ -23,7 +23,8 @@ class ServerHandler:
 		# Helper method to check if connected right now.
 		def _is_connected():
 			try:
-				urllib.request.urlopen(DigitalOceanAPI.POLL_PATH)
+				# Check if we can connect to google.
+				urllib.request.urlopen("https://www.google.com")
 				return True
 			except Exception as e:
 				print("Error was:", e)
