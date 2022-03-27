@@ -25,7 +25,8 @@ class ServerHandler:
 			try:
 				urllib.request.urlopen(DigitalOceanAPI.ROOT_PATH)
 				return True
-			except urllib.error.URLError:
+			except urllib.error.URLError as e:
+				print("Error was:", e)
 				return False
 
 		# Wait until we can connect to DO
