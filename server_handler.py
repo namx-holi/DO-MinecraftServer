@@ -23,9 +23,9 @@ class ServerHandler:
 		# Helper method to check if connected right now.
 		def _is_connected():
 			try:
-				urllib.request.urlopen(DigitalOceanAPI.ROOT_PATH)
+				urllib.request.urlopen(DigitalOceanAPI.POLL_PATH)
 				return True
-			except urllib.error.URLError as e:
+			except Exception as e:
 				print("Error was:", e)
 				return False
 
