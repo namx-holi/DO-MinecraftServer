@@ -1,3 +1,10 @@
+
+import time
+from enum import Enum
+
+from server_handler import ServerHandler
+
+
 # Try import GPIO, and if it doesn't exist, define a stub for it.
 try:
 	import RPi.GPIO as GPIO
@@ -15,209 +22,250 @@ except ImportError:
 	print("Using GPIO_Stub")
 	GPIO = GPIO_Stub()
 
-# Normal imports
-import time
-from server_handler import ServerHandler
+
+# Stub for ServerHandler to use for debugging. Useful to not start up
+#  the actual server.
+class Stub_ServerHandler:
+	INTERNET_CONNECTIVITY_WAIT = 3 # seconds
+	START_SERVER_WAIT = 10 # seconds
+	POLL_SERVER_WAIT = 10 # seconds
+	STOP_SERVER_WAIT = 10 # seconds
+
+	@classmethod
+	def wait_until_internet_connectivity(cls):
+		print(f" [*] Stub for wait_until_internet_connectivity. Sleeping {cls.INTERNET_CONNECTIVITY_WAIT} seconds")
+		time.sleep(cls.INTERNET_CONNECTIVITY_WAIT)
+		print(f" [*] Done!")
+
+	@classmethod
+	def start_server(cls):
+		print(f" [*] Stub for start_server. Sleeping {cls.START_SERVER_WAIT} seconds")
+		time.sleep(cls.START_SERVER_WAIT)
+		print(f" [*] Done!")
+		return True
+
+	@classmethod
+	def poll_server(cls):
+		print(f" [*] Stub for poll_server. Sleeping {cls.POLL_SERVER_WAIT} seconds")
+		time.sleep(cls.POLL_SERVER_WAIT)
+		print(f" [*] Done!")
+		return None
+
+	@classmethod
+	def stop_server(cls):
+		print(f" [*] Stub for stop_server. Sleeping {cls.STOP_SERVER_WAIT} seconds")
+		time.sleep(cls.STOP_SERVER_WAIT)
+		print(f" [*] Done!")
+		return True
+# Uncomment following line if debugging to not actually start up server
+ServerHandler = Stub_ServerHandler
 
 
-# Name of the indicator that will be used to say server is on
-SERVER_TOGGLE_BUTTON_NAME = "server_toggle_btn"
-SERVER_ON_INDICATOR_NAME = "server_indicator"
-SERVER_PROCESSING_INDICATOR_NAME = "server_working_indicator"
+# Time taken to supply a falling edge to light box
+PIN_FALLING_EDGE_TIME = 0.1 # Seconds
 
-
-# Output pin map
-INPUT_PIN_MAP = {
-	SERVER_TOGGLE_BUTTON_NAME: 22
-}
-OUTPUT_PIN_MAP = {
-	SERVER_ON_INDICATOR_NAME: 8,
-	SERVER_PROCESSING_INDICATOR_NAME: 32
-}
-
-# Default state that output pins will start in
-OUTPUT_PIN_INITIAL_STATE = GPIO.LOW
+# Minimum time until a falling edge can be given again
+FALLING_EDGE_COOLDOWN = 0.5 # Seconds
 
 
 
-class IO_Handler:
-
-	def __init__(self, input_pin_map={}, output_pin_map={}):
-		print("Initialising indicator pins")
-
-		# Save state of all pins in pin map
-		self.input_pin_map = input_pin_map
-		self.input_state_map = {
-			x:0
-			for x in input_pin_map.keys()}
-
-		self.output_pin_map = output_pin_map
-		self.output_state_map = {
-			x:OUTPUT_PIN_INITIAL_STATE
-			for x in output_pin_map.keys()}
-
-		# Set up pins on the Pi side
-		self._setup_pi()
+class LightboxState(Enum):
+	OFF = 0
+	ON = 1
+	FLASHING = 2
 
 
-	def _setup_pi(self):
-		print("  Setting up GPIO pins")
 
-		# Just make sure nothing is already set up
+class LightboxInterface:
+
+	def __init__(self):
+		# Store the pins that will be used for each in/out
+		self._button_pin = 22
+		self._light_pin = 8
+
+		# Set the start state.
+		self._light_state = LightboxState.OFF
+
+		# Clear any existing GPIO setup
 		GPIO.cleanup()
 
-		# Use board numbers
+		# Use the board numbers for the pins
 		GPIO.setmode(GPIO.BOARD)
 
-		# Set up pin numbers and modes
-		for pin in self.input_pin_map.values():
-			print(f"Setting up pin {pin} as input")
-			GPIO.setup(pin, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
-
-		for pin in self.output_pin_map.values():
-			print(f"Setting up pin {pin} as output")
-			GPIO.setup(pin, GPIO.OUT, initial=OUTPUT_PIN_INITIAL_STATE)
+		# Set up pin numbers and modes with the rpi
+		GPIO.setup(self._button_pin, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
+		GPIO.setup(self._light_pin, GPIO.OUT, initial=GPIO.LOW)
 
 
-	def update_inputs(self):
-		for tag in self.input_state_map.keys():
-			self.input_state_map[tag] = GPIO.input(self.input_pin_map[tag])
+	def set_state(self, state):
+		"""
+		Will cycle through the lightbox states until the desired state
+		is reached.
+		"""
+		print(f"Setting lightbox state to {state}")
+
+		# If we are already in that state, no need to do anything
+		if state == self._light_state:
+			return
+
+		# Otherwise, keep going to the next state until we reach the
+		#  desired state.
+		while self._light_state != state:
+			self._to_next_light_state()
 
 
-	def check_input(self, tag):
-		if tag not in self.input_state_map:
-			raise Exception("Given input pin tag not in input pin map")
-
-		return self.input_state_map[tag] == 1
-
-
-	def turn_on_output(self, tag):
-		if tag not in self.output_state_map:
-			raise Exception("Given output pin tag not in output pin map")
-
-		self.output_state_map[tag] = GPIO.HIGH
-		GPIO.output(self.output_pin_map[tag], GPIO.HIGH)
-
-
-	def turn_off_output(self, tag):
-		if tag not in self.output_state_map:
-			raise Exception("Given output pin tag not in output pin map")
-
-		self.output_state_map[tag] = GPIO.LOW
-		GPIO.output(self.output_pin_map[tag], GPIO.LOW)
-
-
-	def toggle_output(self, tag):
-		if tag not in self.output_state_map:
-			raise Exception("Given output pin tag not in output pin map")
-
-		# If they go low, we go high
-		if self.output_state_map[tag] == GPIO.LOW:
-			self.turn_on_output(tag)
-		else:
-			self.turn_off_output(tag)
+	def button_is_pressed(self):
+		# Just checks if the button is currently pressed
+		return GPIO.input(self._button_pin) == 1
 
 
 	def close(self):
+		"""
+		Shuts down the interface
+		"""
 		GPIO.cleanup()
+
+
+	def _to_next_light_state(self):
+		"""
+		Will simply simulate pressing the button for the normal
+		lightbox. Will also update the state.
+		"""
+		if self._light_state == LightboxState.OFF:
+			next_state = LightboxState.ON
+		elif self._light_state == LightboxState.ON:
+			next_state = LightboxState.FLASHING
+		elif self._light_state == LightboxState.FLASHING:
+			next_state = LightboxState.OFF
+
+		# Pulse the light switch mode input
+		GPIO.output(self._light_pin, GPIO.HIGH)
+		time.sleep(PIN_FALLING_EDGE_TIME)
+		GPIO.output(self._light_pin, GPIO.LOW)
+		time.sleep(FALLING_EDGE_COOLDOWN)
+
+		# Update internal state
+		self._light_state = next_state
 
 
 
 class App:
+	# TODO: Docstring
 
 	def __init__(self):
-		# Handles starting/stopping server
+		# If the Minecraft server is currently running or not
+		self.server_running = False
+
+		# Handles starting, polling, and shutting down the Minecraft
+		#  server
 		self.server_handler = ServerHandler()
 
-		# Handles showing state of server
-		self.io_handler = IO_Handler(
-			input_pin_map=INPUT_PIN_MAP,
-			output_pin_map=OUTPUT_PIN_MAP
-		)
+		# Handles button presses and the lights on lightbox
+		self.lightbox_interface = LightboxInterface()
 
-		# Working indicator
-		self.io_handler.turn_on_output(SERVER_PROCESSING_INDICATOR_NAME)
+		# Check what state the Mincraft server is in already, and use
+		#  that to update the lightbox
+		self._update_current_server_state()
 
-		# Wait until we are connected to internet!
+
+	def _update_current_server_state(self):
+		"""
+		Checks if the Minecraft server is running or not, and updates
+		the lightbox.
+		"""
+
+		# Turn on flashing mode to show something's happening
+		self.lightbox_interface.set_state(LightboxState.FLASHING)
+
+		# Wait until we have an internet connection
 		self.server_handler.wait_until_internet_connectivity()
 
-		# Check what state the Minecraft server is in already
+		# Check what state the server is in (running or not running)
 		droplet = self.server_handler.poll_server()
 		if droplet:
 			self.server_running = True
-			self.io_handler.turn_on_output(SERVER_ON_INDICATOR_NAME)
+			self.lightbox_interface.set_state(LightboxState.ON)
 		else:
 			self.server_running = False
-			self.io_handler.turn_off_output(SERVER_ON_INDICATOR_NAME)
-
-		# Turn off working indicator
-		self.io_handler.turn_off_output(SERVER_PROCESSING_INDICATOR_NAME)
+			self.lightbox_interface.set_state(LightboxState.OFF)
 
 
 	def start_server(self):
+		"""
+		Starts up the Minecraft server
+		"""
 		if self.server_running:
 			print("Server already running. Not starting again.")
 			return
 
-		# Working indicator
-		self.io_handler.turn_on_output(SERVER_PROCESSING_INDICATOR_NAME)
+		# Turn on flashing mode to show something's happening
+		self.lightbox_interface.set_state(LightboxState.FLASHING)
 
-		# Start server!
-		start_success = self.server_handler.start_server()
-		if start_success:
-			self.server_running = True
-			self.io_handler.turn_on_output(SERVER_ON_INDICATOR_NAME)
-		else:
-			# TODO: Have an error LED?
-			...
+		# Start the Minecraft server
+		self.server_handler.start_server()
+		# TODO: Above line returns a bool for success. Handle this?
 
-		# Turn off working indicator
-		self.io_handler.turn_off_output(SERVER_PROCESSING_INDICATOR_NAME)
+		# Turn on the lightbox fully to show Minecraft server has
+		#  started
+		self.lightbox_interface.set_state(LightboxState.ON)
+
+		# Flag that the server has started
+		self.server_running = True
 
 
 	def stop_server(self):
+		"""
+		Stops the Minecraft server
+		"""
 		if not self.server_running:
 			print("Server not running. Won't try stopping server.")
 			return
 
-		# Working indicator
-		self.io_handler.turn_on_output(SERVER_PROCESSING_INDICATOR_NAME)
+		# Turn on flashing mode to show something's happening
+		self.lightbox_interface.set_state(LightboxState.FLASHING)
 
-		# Stop server!
-		stop_success = self.server_handler.stop_server()
-		if stop_success:
-			self.server_running = False
-			self.io_handler.turn_off_output(SERVER_ON_INDICATOR_NAME)
-		else:
-			# TODO: Have an error LED?
-			...
+		# Stop the Minecraft server
+		self.server_handler.stop_server()
+		# TODO: Above line returns a bool for success. Handle this?
 
-		# Turn off working indicator
-		self.io_handler.turn_off_output(SERVER_PROCESSING_INDICATOR_NAME)
+		# Turn off lightbox to show no server is running
+		self.lightbox_interface.set_state(LightboxState.OFF)
+
+		# Flag that the server has stopped running
+		self.server_running = False
 
 
 	def loop(self):
+		"""
+		This runs constantly. Just keeps checking if the button is
+		pressed
+		"""
 		while True:
-			# Update all input states
-			self.io_handler.update_inputs()
+			# If server start button is pressed, toggle the server
+			#  state
+			if self.lightbox_interface.button_is_pressed():
+				print("Button has been pressed")
 
-			# If server toggle button pressed, toggle server state
-			if self.io_handler.check_input(SERVER_TOGGLE_BUTTON_NAME):
-
-				# If server already running, shut down. Otherwise, start it!
+				# If server is already running, shut down. Otherwise,
+				#  start the server.
 				if self.server_running:
 					self.stop_server()
 				else:
 					self.start_server()
 
+			# Wait a little before checking if button is pressed yet
 			time.sleep(0.1)
 
 
 	def close(self):
-		self.io_handler.close()
+		"""
+		Stops anything being used by this app
+		"""
+		self.lightbox_interface.close()
 
 
 
+# If this file is run as a script, start the app
 if __name__ == "__main__":
 	app = App()
 	try:

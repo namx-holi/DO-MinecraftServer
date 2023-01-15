@@ -3,7 +3,7 @@ from dotenv import load_dotenv
 from pathlib import Path
 
 # TODO: Have a method for a user to set this via environ vars
-RAISE_EXCEPTION_IF_VALIDATION_ERROR = False
+RAISE_EXCEPTION_IF_VALIDATION_ERROR = True
 
 basedir = os.path.abspath(os.path.dirname(__file__))
 load_dotenv(os.path.join(basedir, ".env"))
