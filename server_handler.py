@@ -55,13 +55,15 @@ class ServerHandler:
 				print("Error was:", e)
 				return False
 
-			# Wait until we can connect to the internet
-			while True:
-				if _is_connected():
-					return
-				else:
-					print(f"Cannot connect to internet. Retrying in {INTERNET_CONNECTIVITY_RETRY_DELAY} seconds")
-					time.sleep(INTERNET_CONNECTIVITY_RETRY_DELAY)
+		# Wait until we can connect to the internet
+		print("Waiting on internet connectivity")
+		while True:
+			if _is_connected():
+				return
+			else:
+				print(f"  Cannot connect to internet. Retrying in {INTERNET_CONNECTIVITY_RETRY_DELAY} seconds")
+				time.sleep(INTERNET_CONNECTIVITY_RETRY_DELAY)
+		print("")
 
 
 	@classmethod
