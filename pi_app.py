@@ -1,5 +1,6 @@
 
 import time
+import traceback
 from enum import Enum
 
 from server_handler import ServerHandler
@@ -58,7 +59,7 @@ class Stub_ServerHandler:
 		print(f" [*] Done!")
 		return True
 # Uncomment following line if debugging to not actually start up server
-ServerHandler = Stub_ServerHandler
+# ServerHandler = Stub_ServerHandler
 
 
 # Time taken to supply a falling edge to light box
@@ -270,6 +271,6 @@ if __name__ == "__main__":
 	app = App()
 	try:
 		app.loop()
-	except Exception as e:
-		print(e)
+	except Exception:
+		print(traceback.format_exc())
 	app.close()
