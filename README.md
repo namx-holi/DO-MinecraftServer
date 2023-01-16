@@ -8,6 +8,19 @@ TODO: Description of project
 ### Raspberry Pi
 TODO: Notes about what to install on RPi
 
+Install required packages on the RPi
+```sh
+sudo apt update
+```
+
+Update pip to the latest version. Also install RPi GPIO packages.
+```sh
+pip install --upgrade pip setuptools
+pip install wheel
+
+pip install gpiozero RPi.GPIO
+```
+
 TODO: Note about generating an ssh access key on the pi.
 
 
